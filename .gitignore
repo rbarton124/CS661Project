@@ -1,0 +1,123 @@
+# Pragmatic .gitignore for ML/C++ projects
+
+# C++ specific
+*.o
+*.obj
+*.so
+*.ko
+*.a
+*.lib
+*.dll
+*.exe
+*.out
+*.app
+*.i
+*.ii
+*.d
+*.s
+*.su
+*.asm
+*.class
+# End of C++ specific
+
+# Python specific
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+# End of Python specific
+
+# Machine Learning specific
+*.model
+# End of Machine Learning specific
+
+# CUDA specific
+*.fatbin
+*.cubin
+*.ptx
+*.hash
+*.cuobjdump
+# End of CUDA specific
+
+# CMake and Make specific
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+build/
+!build/.keep
+# End of CMake and Make specific
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+# End of Logs and databases
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+# End of OS generated files
+
+# Editor directories and files
+.vscode/
+*.swp
+*~
+# End of Editor directories and files
+
+# Other files and directories to ignore
+/.vagrant/
+/.idea/
+/*.sav
+/*.bak
+/*.aux
+/*.lof
+/*.log
+/*.lot
+/*.fls
+/*.fdb_latexmk
+/.bzr/
+/.tox/
+/.eunit/
+/.git-ftp.yml
+/.grunt/
+/.jekyll-cache/
+/.sass-cache/
+/node_modules/
+/bower_components/
+/cover/
+.rvm/
+.env
+.env.local
+# End of Other files and directories to ignore
+
+# Local config files
+/local_settings.py
+/secrets.py
+# End of Local config files
+
+# Dataset related (you may wish to version control datasets, depending on size and nature)
+*.tar.gz
+*.gz
+*.zip
+*.rar
+!data/.keep
+# End of Dataset related
+
+# Logs
+logs/
+*.log
+!logs/.keep
+# End of Logs
+
+# Exclude the license file, as it is generally important to version control it
+# LICENSE
+
+# Add any additional file patterns or directories as needed
+# End of File
