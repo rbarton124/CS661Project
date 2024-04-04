@@ -2,12 +2,10 @@ cmake_minimum_required(VERSION 3.2)
 
 project(torch_cpp_benchmark)
 
-# SET THIS TO WHERE YOUR LIBTORCH IS
+# SET THIS TO WHERE YOUR LIBTORCH IS 
 set(CMAKE_PREFIX_PATH ~/Downloads/Code/Libraries/libtorch)
 
 find_package(Torch REQUIRED)
-
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" "${TORCH_CXX_FLAGS}")
 
 list(APPEND CMAKE_CXX_FLAGS "${TORCH_CXX_FLAGS}")
 
