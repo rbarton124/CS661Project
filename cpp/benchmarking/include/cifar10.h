@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <torch/torch.h>
 
+// Constants needed for CIFAR10 dataset
 namespace CIFAR10_CONSTANTS {
     constexpr uint32_t TRAIN_SIZE = 50000;
     constexpr uint32_t TEST_SIZE = 10000;
@@ -30,6 +31,12 @@ namespace CIFAR10_CONSTANTS {
     const std::string TEST_LOCATION = "test_batch.bin";
 };
 
+
+/*
+CIFAR10Test class
+
+Used for loading CIFAR10 test dataset from files. Usage: CIFAR10Test( filepath )
+*/
 class CIFAR10Test: public torch::data::datasets::Dataset<CIFAR10Test> {
 public:
     explicit CIFAR10Test(const std::string& root);
@@ -46,6 +53,12 @@ private:
     torch::Tensor images, targets;
 };
 
+
+/*
+get CIFAR10 test dataloader method
+
+Used for loading the CIFAR10 dataset from files into a PyTorch Dataloader.
+*/
 inline auto get_CIFAR10_test_dataloader(const std::string& root, size_t batch_size) {
     auto test_dataset = CIFAR10Test(root).map(torch::data::transforms::Stack<>());
 

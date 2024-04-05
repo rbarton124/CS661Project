@@ -4,12 +4,14 @@
 
 #include <torch/torch.h>
 
+// Testing results struct
 struct TestingResults {
     double accuracy, neg_log_loss;
     std::vector<int> pred_indices;
 };
 
 
+// Used for testing a model w/ a specified dataloader
 TestingResults test_model(auto& model, const auto& test_dataloader) {
     auto device = get_device();
 
