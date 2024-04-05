@@ -31,6 +31,6 @@ It will test loading the cifar10 dataset, loading the model at the specified mod
 and then it will attempt to run the test function. If it doesn't crash and prints
 accuracies you'd expect, it should be ok.
 */
-void test_testing(const std::string& cifar10_path, const std::string& model_path);
+void test_cifar10_testing(const std::string& cifar10_path, const std::string& model_path);
 
 

@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
                                example_input,
                                example_output);
 
-    test_testing("../data/cifar-10-batches-bin/", "../../../python/scripts/dummy_cifar10_network.pt");
+    test_cifar10_testing("../data/cifar-10-batches-bin/", "../../../python/scripts/dummy_cifar10_network.pt");
 
     #endif
 }
