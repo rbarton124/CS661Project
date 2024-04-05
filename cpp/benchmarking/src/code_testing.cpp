@@ -52,7 +52,7 @@ void test_load_compiled_network(const std::string& path, torch::Tensor example_i
     }
 } 
 
-void test_testing(const std::string& cifar10_path, const std::string& model_path) {
+void test_cifar10_testing(const std::string& cifar10_path, const std::string& model_path) {
     auto dummy_test_dataloader = get_CIFAR10_test_dataloader(cifar10_path, 32);
     auto network = load_compiled_network(model_path);
 
