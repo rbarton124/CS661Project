@@ -1,29 +1,33 @@
 
 # TODOS Apr 8 - 10
 
-
-* Collective
-    * Figure out what stats we want to pull
-        * Perf
-        * Nsight compute
-    
-
 * Jack
     * Look at implmentations/relevant context for transformers 
         * Open source transformer models (huggingface) run it
+        * Quantization and pruning for transformers
     * C++ hook to load transformer-relevant data
+    * Make C++ executable to run the necessary pruned/quantized/base models and report accuracies for both transformers and resnet
+    * How to pack the numbers according to their bits in quantization
 
 * Chiyue
+    * Figure out what stats we want to pull
+        * Perf
+        * Nsight compute
+        * Afterwards can work on (w/ Jack or Russell) on analysis scripts using example data
     * Script to pull stats from perf, Nsight compute
     * Push code to github
     * Test out Jack's code
 
-
 * Russell
     * Push resnet code to github for models
-    * Debug quantization models
+    * Debug pruning quantization
     * Test out Jack's code
-
+    * (After sync w/ Jack offline) Transformers pruning/quantization
+    * Pruning
+        * Underlying weight tensors -> sparse formats (COO, CSR, parameterizable)
+            * See torch.sparse
+        * Sanity check that when using these in inference, they are indeed sparse
+    
 
 
 # Meeting notes
@@ -42,12 +46,18 @@ Apr 8
     * Pruning: 
     * Quantization:
     * C++: 
+    * Script to pull metris:
 
 * Transformers/NLP
     * Base: 
     * Pruning: 
     * Quantization: 
     * C++: 
+    * Script to pull metrics:
+
+* Analysis scripts (in python)
+    * Plotting
+    * Loading data
 
 Apr 10
 
