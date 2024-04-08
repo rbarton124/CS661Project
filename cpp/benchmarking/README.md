@@ -28,6 +28,15 @@ The rough structure of the files look like this:
 
 # Todos:
 
-* Comments
+* ~~Comments~~
+* Turn it into an executable
 * C++ profiling equivalent of tensorboard 
+
+## Main API breakdown
+
+After building, the following should become available
+./test_inference <datatype> <model data path> <relative model path>
+
+<datatype> - currently only supports "cifar10"
+
 
