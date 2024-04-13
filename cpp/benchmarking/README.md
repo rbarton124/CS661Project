@@ -25,7 +25,6 @@ The rough structure of the files look like this:
     * The first is the path directory of the data files. This should be automatically set to the right one at ../data/cifar-10-batches-bin
     * The second is the directory of the compiled model. For the dummy model, it is located at ../../../python/scripts/dummy_cifar10_network.pt
 
-
 # Todos:
 
 * ~~Comments~~

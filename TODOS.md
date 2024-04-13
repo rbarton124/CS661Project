@@ -27,8 +27,6 @@
         * Underlying weight tensors -> sparse formats (COO, CSR, parameterizable)
             * See torch.sparse
         * Sanity check that when using these in inference, they are indeed sparse
-    
-
 
 # Meeting notes
 
