@@ -1,3 +1,24 @@
+# TODOS Apr 13 - 17
+
+* Jack
+    * Setup C++ script to run the language model stuff 
+        * Sync w/ Russell (NLP stuff) - need some NLP transformers models
+        * Setting up pruning/quantization
+    * Finish w/ the C++ exes
+    * I can double check verify the pruning/quantization for ResNet (including in C++)
+        * Check the bits are indeed packed
+        * Pruning is indeed represented in sparse
+    * Run Chiyue's scripts
+    * Afterwards, work w/ Chiyue on experiments
+
+* Chiyue
+    * Run experiments DLProf + Resnet parameterizations (save models)
+    * 
+
+
+* Russell
+    * 
+
 
 # TODOS Apr 8 - 10
 
@@ -8,6 +29,7 @@
     * C++ hook to load transformer-relevant data
     * Make C++ executable to run the necessary pruned/quantized/base models and report accuracies for both transformers and resnet
     * How to pack the numbers according to their bits in quantization
+
 
 * Chiyue
     * Figure out what stats we want to pull
