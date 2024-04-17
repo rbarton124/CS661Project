@@ -36,3 +36,15 @@ echo "Profiling complete. Results saved to $output_file.ncu-rep"
 $ncu_path --import $output_file.ncu-rep >> $output_file.txt
 
 echo "Analyzed result saved to $output_file.txt"
+
+LOG_FILE="$output_file.txt"
+
+DURATION=$(grep "Duration" "$LOG_FILE" | awk '{print $3}')
+CACHE_HIT=$(grep "L1/TEX Hit Rate" "$LOG_FILE" | awk '{print $5}')
+SM_BUSY=$(grep "SM Busy" "$LOG_FILE" | awk '{print $4}')
+MEM_BUSY=$(grep "Mem Busy" "$LOG_FILE" | awk '{print $4}')
+
+echo "$DURATION" >> duration.txt
+echo "$SM_BUSY" >> sm.txt
+echo "$MEM_BUSY" >> mem.txt
+echo "$CACHE_HIT" >> cache.txt
