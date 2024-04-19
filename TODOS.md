@@ -8,8 +8,13 @@
     * I can double check verify the pruning/quantization for ResNet (including in C++)
         * Check the bits are indeed packed
         * Pruning is indeed represented in sparse
+        * Check it in C++ python
     * Run Chiyue's scripts
     * Afterwards, work w/ Chiyue on experiments
+    * I can start on the report outline/draft
+    * Resaerch what people have done to optimie the kernels for compute/memory
+        * What optimizations people have done
+        * Memory bound - increase the batch size alleviate it
 
 * Chiyue
     * Run experiments DLProf + Resnet parameterizations (save models)
@@ -55,6 +60,7 @@
     * Pruning
         * Underlying weight tensors -> sparse formats (COO, CSR, parameterizable)
             * See torch.sparse
+
         * Sanity check that when using these in inference, they are indeed sparse
 
 # Meeting notes
