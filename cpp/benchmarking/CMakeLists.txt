@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.2)
 project(torch_cpp_benchmark)
 
 # SET THIS TO WHERE YOUR LIBTORCH IS 
-set(CMAKE_PREFIX_PATH ~/Downloads/Code/Libraries/libtorch)
+set(CMAKE_PREFIX_PATH /home/cw541/661/project/libtorch)
 
 find_package(Torch REQUIRED)
 
