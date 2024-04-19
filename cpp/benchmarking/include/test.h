@@ -77,7 +77,7 @@ TestingResults test_model(auto& model, const auto& test_dataloader) {
 
     results.accuracy = accuracy;
     results.neg_log_loss = neg_log_loss;
-    // results.pred_indices = all_preds;
+    results.pred_indices = all_preds;
 
     return results;
 }

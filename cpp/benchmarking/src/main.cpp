@@ -39,9 +39,10 @@ int main(int argc, char* argv[]) {
 
     TestingResults results;
     if (mode == "cifar10") {
+        std::cout << "Running cifar10 tests\n";
         auto network = load_compiled_network(model_path);
         auto cifar10_testloader = get_CIFAR10_test_dataloader(test_data_path, batch_size);
-        TestingResults results = test_model(network, cifar10_testloader);
+        results = test_model(network, cifar10_testloader);
     } else if (mode == "imdb") {
         throw std::runtime_error("Not implemented");
     } else {

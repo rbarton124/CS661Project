@@ -1,7 +1,5 @@
 #pragma once
 
-#define DEBUG
-
 #ifdef DEBUG
 #define debug_print(a) std::cout << #a << " is " << (a) << "\n";
 #else
