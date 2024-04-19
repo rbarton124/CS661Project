@@ -82,6 +82,4 @@ TestingResults test_model(auto& model, const auto& test_dataloader) {
     return results;
 }
 
-void display_results(const TestingResults& results) {
-    std::cout << "Accuracy: " << results.accuracy << '\n';
-}
+void display_results(const TestingResults& results);

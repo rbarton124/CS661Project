@@ -22,7 +22,14 @@
 
 
 * Russell
-    * 
+    * Test out Jack's code
+    * Pruning
+        * Underlying weight tensors -> sparse formats (COO, CSR, parameterizable)
+            * See torch.sparse
+        * Sanity check that when using these in inference, they are indeed sparse
+    * Quantization
+        *  Switch from 32-bit floating-point  to 8-bit integers
+        *  
 
 
 # TODOS Apr 8 - 10
