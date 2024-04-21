@@ -186,7 +186,7 @@ LR_PATIENCE = 5  # Patience for ReduceLROnPlateau scheduler
 LR_FACTOR = 0.25  # Factor by which the learning rate will be reduced
 
 ## Training
-EPOCHS = 200  # total number of training epochs
+EPOCHS = 3  # total number of training epochs
 CHECKPOINT_FOLDER = "./saved_models"  # folder where models are saved
 
 ## Pruning and Quantization
