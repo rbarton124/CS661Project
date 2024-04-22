@@ -475,7 +475,7 @@ class CNNFactory:
         return model
     
     @staticmethod
-    def evaluate_model(model, DATA_ROOT = "./data"):
+    def evaluate_model(model, device, DATA_ROOT = "./data"):
 
         VAL_BATCH_SIZE = 50  # validation batch size
         NUM_WORKERS = 8  # number of workers for DataLoader
@@ -503,7 +503,7 @@ class CNNFactory:
             num_workers=NUM_WORKERS,
             pin_memory=True
         )
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         criterion = nn.CrossEntropyLoss()
         model.to(device)
         model.eval()
