@@ -20,17 +20,28 @@ res_block_configs = [
 
 def main():
     # You can make and Train a Resnet like in this function
-    quantizedResnet = makeAndTrainQuantizedResNet(Save_Name = "ResNet_QuantizationTrained.pth")
+    # quantizedResnet = makeAndTrainQuantizedResNet(Save_Name = "ResNet_QuantizationTrained.pth")
     # You can make and Train a CNN like in this function
     # prunedCNN = makeAndTrainCNNPruned(Save_Name = "CNN_Pruned.pth")
     # You can load a model from a pth file like this
     ## either using the same setup you used for training
-    loadedModel = CNNFactory.loadModel(model_path = "./saved_models/ResNet_QuantizationTrained.pth.pth", architecture_type='resnet', quantTrue=True, res_block_configs=res_block_configs, num_classes=10)
+    # loadedModel = CNNFactory.loadModel(model_path = "./saved_models/ResNet_QuantizationTrained.pth.pth", architecture_type='resnet', quantTrue=True, res_block_configs=res_block_configs, num_classes=10)
     ## or passing it a reference model
-    CNNFactory.saveModel(quantizedResnet, "./saved_models", save_name="ResNet_Quantized.pth")
-    loadedModel = CNNFactory.loadModel(model_path = "./saved_models/ResNet_Quantized.pth.pth", reference_model = quantizedResnet)
+    # CNNFactory.saveModel(quantizedResnet, "./saved_models", save_name="ResNet_Quantized.pth")
+    # loadedModel = CNNFactory.loadModel(model_path = "./saved_models/ResNet_Quantized.pth.pth", reference_model = quantizedResnet)
     # You can also save a model to a pth file like this
-    CNNFactory.saveModel(loadedModel, "./saved_models/ResNet_Quantized.pth", save_name="loadedModel.pth")
+    # CNNFactory.saveModel(loadedModel, "./saved_models/ResNet_Quantized.pth", save_name="loadedModel.pth")
+
+    
+    model = makeNormalResNet("NormalResNet.pth")
+    loadedResNetModel = CNNFactory.loadModel(model_path = "./saved_models/NormalResNet.pth.pth", architecture_type='resnet', quantTrue=False, res_block_configs=res_block_configs, num_classes=10)
+
+def makeNormalResNet(Save_Name = "ResNet_Normal.pth"):
+    net = CNNFactory.makeModel(architecture_type='resnet', quantTrue=False, res_block_configs=res_block_configs, num_classes=10) #This is how you make a resnet model
+    net = CNNFactory.trainModel(net, EPOCHS = 100, ENABLE_QUANTIZATION = False, DATA_ROOT = "./data", Save_Name = Save_Name) #This is how you train a model
+    print ("ResNet size before quantization:")
+    CNNFactory.checkSize(net) # This is how you check the size of a model
+    return net
 
 
 def makeAndTrainQuantizedResNet(Save_Name = "ResNet_Quantized.pth"):
