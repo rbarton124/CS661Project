@@ -7,7 +7,6 @@ import torch.nn.functional as F
 
 import torchvision
 import torchvision.transforms as transforms
-
 from torchvision.datasets import CIFAR10
 from torch.utils.data import DataLoader
 
@@ -15,14 +14,18 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import torch.quantization
+from torch.quantization import QConfig, default_observer, default_per_channel_weight_observer
 
-import time
+import torch.nn.utils.prune as prune
+
+import numpy as np
+
 
 
 # ===== Set up the SimpleNN model =====
 
 class CNNBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, quantTrue=False):
         super(CNNBlock, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
         self.bn = nn.BatchNorm2d(out_channels)
@@ -34,9 +37,15 @@ class CNNBlock(nn.Module):
         x = self.relu(x)
         return x
     
+    def prune_weights(self, amount):
+        prune.l1_unstructured(self.conv, 'weight', amount=amount)
+
+    def to_sparse(self):
+        self.conv.weight = nn.Parameter(self.conv.weight.to_sparse())
+    
 class ResBlock(nn.Module):
     expansion = 1
-    def __init__(self, in_channels, out_channels, stride=1):
+    def __init__(self, in_channels, out_channels, stride=1, quantTrue=False):
         super(ResBlock, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(out_channels)
@@ -48,19 +57,41 @@ class ResBlock(nn.Module):
             self.shortcut = nn.Sequential(
                 nn.Conv2d(in_channels, self.expansion*out_channels, kernel_size=1, stride=stride, bias=False), nn.BatchNorm2d(self.expansion*out_channels)
             )
+        
+        self.quantadd = nn.quantized.FloatFunctional()
+
+        self.quantTrue = quantTrue
 
     def forward(self, x):
+        identity = x
         out = self.conv1(x)
         out = self.bn1(out)
         out = F.relu(out)
         out = self.conv2(out)
         out = self.bn2(out)
-        out += self.shortcut(x)
+        
+        if self.quantTrue:
+            if self.shortcut is not None:
+                identity = self.shortcut(identity)
+            out = self.quantadd.add(out, identity)
+        else:
+            if self.shortcut is not None:
+                identity = self.shortcut(identity)
+            out += identity
+
         out = F.relu(out)
         return out
+    
+    def prune_weights(self, amount):
+        prune.l1_unstructured(self.conv1, 'weight', amount=amount)
+        prune.l1_unstructured(self.conv2, 'weight', amount=amount, )
+
+    def to_sparse(self):
+        self.conv1.weight = nn.Parameter(self.conv1.weight.to_sparse())
+        self.conv2.weight = nn.Parameter(self.conv2.weight.to_sparse())
 
 class CNN(nn.Module):
-    def __init__(self, architecture_type='cnn', conv_layer_configs=None, fc_layer_configs=None, res_block_configs=None, num_classes=10):
+    def __init__(self, architecture_type='cnn', quantTrue = False, conv_layer_configs=None, fc_layer_configs=None, res_block_configs=None, num_classes=10):
         super(CNN, self).__init__()
         
         # Initialization code for other parts of the class remains the same
@@ -74,7 +105,7 @@ class CNN(nn.Module):
             self.init_conv = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
             self.init_bn = nn.BatchNorm2d(16)
             self.init_relu = nn.ReLU(inplace=True)
-            self.features, prev_features = self._make_resnet_layers(res_block_configs)
+            self.features, prev_features = self._make_resnet_layers(res_block_configs, quantTrue)
         else:
             raise ValueError("Unsupported architecture type: {}".format(architecture_type))
         
@@ -94,7 +125,7 @@ class CNN(nn.Module):
         in_channels = out_channels
         return nn.Sequential(*layers)
     
-    def _make_resnet_layers(self, res_block_configs):
+    def _make_resnet_layers(self, res_block_configs, quantTrue=False):
         layers = []
         for block_config in res_block_configs:
             in_channels = block_config['in_channels']
@@ -102,17 +133,17 @@ class CNN(nn.Module):
             num_blocks = block_config['num_blocks']
             stride = block_config['stride']
             
-            layers.append(self._make_layer(ResBlock, in_channels, out_channels, num_blocks, stride))
+            layers.append(self._make_layer(ResBlock, in_channels, out_channels, num_blocks, stride, quantTrue=quantTrue))
             
             # Update in_channels for the next set of blocks
             in_channels = out_channels * ResBlock.expansion
         return nn.Sequential(*layers), in_channels
 
-    def _make_layer(self, block, in_channels, out_channels, num_blocks, stride):
+    def _make_layer(self, block, in_channels, out_channels, num_blocks, stride, quantTrue = False):
         strides = [stride] + [1]*(num_blocks-1)  # First block might have a stride to downsample
         blocks = []
         for stride in strides:
-            blocks.append(block(in_channels, out_channels, stride))
+            blocks.append(block(in_channels, out_channels, stride, quantTrue=quantTrue))
             in_channels = out_channels * block.expansion  # Update in_channels for the next block
         return nn.Sequential(*blocks)
 
@@ -137,9 +168,9 @@ class CNN(nn.Module):
         return x
     
 
-class QuantizableCNN(CNN):
+class QuantizablePrunableCNN(CNN):
     def __init__(self, *args, **kwargs):
-        super(QuantizableCNN, self).__init__(*args, **kwargs)
+        super(QuantizablePrunableCNN, self).__init__(*args, **kwargs)
         self.quant = torch.quantization.QuantStub()
         self.dequant = torch.quantization.DeQuantStub()
     
@@ -148,6 +179,17 @@ class QuantizableCNN(CNN):
         x = super().forward(x)
         x = self.dequant(x)
         return x
+    
+    def prune_weights(self, amount=0.15):
+        for module in self.modules():
+            if isinstance(module, (CNNBlock, ResBlock)):
+                module.prune_weights(amount)
+
+    def convert_to_sparse(self):
+        for module in self.modules():
+            if isinstance(module, (CNNBlock, ResBlock)):
+                module.to_sparse()
+
 
 
 # ===== Define and set HyperParameters =====
@@ -190,7 +232,8 @@ EPOCHS = 3  # total number of training epochs
 CHECKPOINT_FOLDER = "./saved_models"  # folder where models are saved
 
 ## Pruning and Quantization
-ENABLE_QUANTIZATION = True
+ENABLE_QUANTIZATION = False
+ENABLE_PRUNING = True
 
 # ===== Set up preprocessing functions =====
 
@@ -255,20 +298,23 @@ val_loader = DataLoader(
 ## specify the device for computation
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+net = QuantizablePrunableCNN(architecture_type='resnet', quantTrue=ENABLE_QUANTIZATION, res_block_configs=res_block_configs, num_classes=10) 
+# net = QuantizableCNN(architecture_type='cnn', quantTrue=ENABLE_QUANTIZATION, conv_layer_configs=conv_layer_configs, fc_layer_configs=fc_layer_configs, num_classes=10)
+
+
 if ENABLE_QUANTIZATION:
-    net = QuantizableCNN(architecture_type='resnet', res_block_configs=res_block_configs, num_classes=10)
-    net.qconfig = torch.quantization.get_default_qat_qconfig('qnnpack')  # Use 'fbgemm' for x86 or 'qnnpack' for ARM
+    my_qconfig = QConfig(
+    activation=torch.quantization.default_observer.with_args(dtype=torch.quint8),
+    weight=torch.quantization.default_weight_observer.with_args(dtype=torch.qint8)
+    )
+    net.qconfig = my_qconfig
     torch.quantization.prepare_qat(net, inplace=True)
-else:
-    # For CNN
-    # net = CNN(architecture_type='cnn', conv_layer_configs=conv_layer_configs, fc_layer_configs=fc_layer_configs, num_classes=10)
-    # For ResNet
-    net = CNN(architecture_type='resnet', res_block_configs=res_block_configs, num_classes=10)
 
 # deploy the network to device
 net.to(device)
 
 print(next(net.parameters()).device)
+
 
 # ===== Set up the loss function and optimizer =====
 
@@ -279,6 +325,9 @@ criterion = nn.CrossEntropyLoss()
 ## Add optimizer
 optimizer = optim.SGD(net.parameters(), lr=INITIAL_LR, momentum=MOMENTUM, weight_decay=REG)
 scheduler = ReduceLROnPlateau(optimizer, 'min', patience=LR_PATIENCE, factor=LR_FACTOR)
+
+## Pruning Array
+PruningArray = [0.5, 0.5, 0] # np.linspace(0.10, 0.35, EPOCHS)
 
 
 # ===== Start the training process =====
@@ -328,6 +377,10 @@ for i in range(0, EPOCHS):
     avg_loss = train_loss / len(train_loader)
     avg_acc = correct_examples / total_examples
     print("Training loss: %.4f, Training accuracy: %.4f" %(avg_loss, avg_acc))
+
+    if ENABLE_PRUNING:
+        net.prune_weights(PruningArray[i])
+        print("Applying pruning: " + f"{PruningArray[i]:.2%}" )
 
     ## Validate on the validation dataset
     ## switch to eval mode
@@ -380,3 +433,7 @@ for i in range(0, EPOCHS):
 
 print("="*50)
 print(f"==> Optimization finished! Best validation accuracy: {best_val_acc:.4f}")
+
+if ENABLE_PRUNING:
+    net.convert_to_sparse()
+    print("Converting to sparse model")
