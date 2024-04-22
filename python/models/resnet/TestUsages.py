@@ -18,14 +18,52 @@ res_block_configs = [
     {'in_channels': 32, 'out_channels': 64, 'stride': 2, 'num_blocks': 3}
 ]
 
+ResNetConfig = {
+    'architecture_type': 'resnet',
+    'quantTrue': False,
+    'res_block_configs': res_block_configs,
+    'num_classes': 10
+    }
+
+CNNConfig = {
+    'architecture_type': 'cnn',
+    'quantTrue': False,
+    'conv_layer_configs': conv_layer_configs,
+    'fc_layer_configs': fc_layer_configs,
+    'num_classes': 10
+    }
+
+ResNetQuantConfig = {
+    'architecture_type': 'resnet',
+    'quantTrue': True,
+    'res_block_configs': res_block_configs,
+    'num_classes': 10
+
+}
 def main():
-    # # You can make and Train a normal Resnet like in this function
-    # normalResnet = makeNormalResNet(Save_Name = "ResNet_Normal")
+    # test1()
+    # test2()
+
+    # This is a config test for savin and loading a QUANTIZED model using configs
+    net = CNNFactory.makeModel(**ResNetQuantConfig)
+
+    CNNFactory.quantizeModel(net)
+    CNNFactory.saveModel(net, "./saved_models", save_name="ResNetQuantConfigTest", config=ResNetConfig, quantized=True)
+
+    net = CNNFactory.loadModel(path = "./saved_models", name = "ResNetConfigTest")
+    CNNFactory.evaluate_model(net, 'cpu', 100, "./data")
+
+def test1():
+    # You can make and Train a normal Resnet like in this function
+    normalResnet = makeNormalResNet(Save_Name = "ResNet_Normal")
+    
     # You can make and Train a quantized Resnet like in this function
     quantizedResnet = makeAndTrainQuantizedResNet(Save_Name = "ResNet_QuantizationTrained")
     CNNFactory.saveModel(quantizedResnet, "./saved_models", save_name="ResNet_Quantized") ## This is also saving the quantized version of the model
-    # # You can make and Train a CNN like in this function
-    # prunedCNN = makeAndTrainCNNPruned(Save_Name = "CNN_Pruned")
+
+    # You can make and Train a CNN like in this function
+    prunedCNN = makeAndTrainCNNPruned(Save_Name = "CNN_Pruned")
+
     # You can load a model from a pth file like this
     ## either using the same setup you used for training
     quantizationTrainedResNet = CNNFactory.loadModel(path = "./saved_models", name = "ResNet_QuantizationTrained", architecture_type='resnet', quantTrue=True, res_block_configs=res_block_configs, num_classes=10)
@@ -33,8 +71,10 @@ def main():
     quantizationTrainedResNet = CNNFactory.loadModel(path = "./saved_models", name = "ResNet_QuantizationTrained", reference_model=quantizationTrainedResNet)
     ## Remember if you are loading a model that has been qunatized you need to specify quantized=True when loading from a pth
     quantizedResNetLoaded= CNNFactory.loadModel(path = "./saved_models", name = "ResNet_Quantized", architecture_type='resnet', quantTrue=True, res_block_configs=res_block_configs, num_classes=10, quantized=True)
+    
     print("EOT")
 
+def test2():
     # Here is some more explicit saving and loading example without function abstraction or training
     net = CNNFactory.makeModel(architecture_type='resnet', quantTrue=True, res_block_configs=res_block_configs, num_classes=10)
     CNNFactory.saveModel(net, "./saved_models", save_name="ResNetTest1")
