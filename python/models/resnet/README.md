@@ -1,4 +1,4 @@
-# CNNBuilder.py
+# CNNBuilder
 ## Overview
 
 `CNNBuilder.py` is a Python module designed for constructing, training, and manipulating Convolutional Neural Networks (CNNs) using PyTorch. It includes support for creating standard and residual network architectures, quantization, pruning, and conversion to sparse formats. This module is particularly useful for researchers and developers working on deep learning projects involving image recognition tasks with CIFAR-10 dataset as a built-in example.
