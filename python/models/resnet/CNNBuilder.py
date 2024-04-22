@@ -208,19 +208,6 @@ class CNNFactory:
         torch.quantization.prepare_qat(model, inplace=True)
     
     @staticmethod
-    def loadModel(path, name, reference_model=None, architecture_type=None, conv_layer_configs=None, fc_layer_configs=None, res_block_configs=None, num_classes=10, quantized=False, quantTrue=False):
-        if reference_model is not None:
-            model = reference_model
-        else:
-            model = CNNFactory.makeModel(architecture_type, conv_layer_configs, fc_layer_configs, res_block_configs, num_classes, quantTrue)
-        loadedModel = torch.load(os.path.join(path, name + '.pth'))
-        if quantized:
-            torch.quantization.convert(model.eval(), inplace=True)
-        model.load_state_dict(loadedModel['state_dict'])
-        return model
-
-    
-    @staticmethod
     def trainModel(net, EPOCHS = 5, ENABLE_QUANTIZATION = False, ENABLE_PRUNING = False, pruning_epochs = 3, starting_sparsity = 0.1, target_sparsity = 0.5, DATA_ROOT = "./data", Save_Name = "CNN.pth"):
         
         ## DataLoader
@@ -465,6 +452,8 @@ class CNNFactory:
     
     @staticmethod
     def evaluate_model(model, device, num_steps, DATA_ROOT = "./data"):
+        # model.to(device)
+        # model.eval()
 
         VAL_BATCH_SIZE = 50  # validation batch size
         NUM_WORKERS = 8  # number of workers for DataLoader
@@ -517,11 +506,29 @@ class CNNFactory:
         return accuracy
     
     @staticmethod
-    def saveModel(model, path, save_name):
+    def saveModel(model, path, save_name, config = None, quantized = False, pruned = False):
         if not os.path.exists(path):
             os.makedirs(path)
         print("Saving ...")
-        state = {'state_dict': model.state_dict()}
+        state = {'state_dict': model.state_dict(), 'config': config, 'quantized': quantized, 'pruned': pruned}
         torch.save(state, os.path.join(path, save_name + '.pth'))
         print(f"Model saved at {os.path.join(path, save_name + '.pth')}")
+        return model
+    
+       
+    @staticmethod
+    def loadModel(path = './saved_models', name = 'model', reference_model=None, architecture_type=None, conv_layer_configs=None, fc_layer_configs=None, res_block_configs=None, num_classes=10, quantized=False, quantTrue=False):
+        loadedModel = torch.load(os.path.join(path, name + '.pth'))
+        if reference_model is not None:
+            model = reference_model
+        else:
+            if loadedModel['config'] is None:
+                model = CNNFactory.makeModel(architecture_type, conv_layer_configs, fc_layer_configs, res_block_configs, num_classes, quantTrue)
+            else:
+                model = CNNFactory.makeModel(**loadedModel['config'])
+                quantized = loadedModel['quantized']
+                pruned = loadedModel['pruned']
+        if quantized:
+            torch.quantization.convert(model.eval(), inplace=True)
+        model.load_state_dict(loadedModel['state_dict'])
         return model
