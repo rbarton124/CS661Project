@@ -475,13 +475,43 @@ class CNNFactory:
         return model
     
     @staticmethod
-    def evaluate_model(model, data_loader):
+    def evaluate_model(model, DATA_ROOT = "./data"):
+
+        VAL_BATCH_SIZE = 50  # validation batch size
+        NUM_WORKERS = 8  # number of workers for DataLoader
+        mean = [0.4914, 0.4822, 0.4465]
+        std = [0.2023, 0.1994, 0.2010]
+
+        transform_val = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std)
+        ])
+
+        # ===== Set up dataset and dataloader =====
+
+        val_set = CIFAR10(
+            root = DATA_ROOT, 
+            train = False, 
+            download = True,
+            transform = transform_val
+        )
+
+        val_loader = DataLoader(
+            val_set, 
+            batch_size=VAL_BATCH_SIZE,
+            shuffle=True,
+            num_workers=NUM_WORKERS,
+            pin_memory=True
+        )
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        criterion = nn.CrossEntropyLoss()
+        model.to(device)
         model.eval()
         total = 0
         correct = 0
         loss = 0
         with torch.no_grad():
-            for data in data_loader:
+            for data in val_loader:
                 images, labels = data
                 images, labels = images.to(device), labels.to(device)
                 outputs = model(images)
