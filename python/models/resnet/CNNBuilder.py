@@ -464,6 +464,59 @@ class CNNFactory:
         return model
     
     @staticmethod
+    def evaluate_model(model, device, num_steps, DATA_ROOT = "./data"):
+
+        VAL_BATCH_SIZE = 50  # validation batch size
+        NUM_WORKERS = 8  # number of workers for DataLoader
+        mean = [0.4914, 0.4822, 0.4465]
+        std = [0.2023, 0.1994, 0.2010]
+
+        transform_val = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std)
+        ])
+
+        # ===== Set up dataset and dataloader =====
+
+        val_set = CIFAR10(
+            root = DATA_ROOT, 
+            train = False, 
+            download = True,
+            transform = transform_val
+        )
+
+        val_loader = DataLoader(
+            val_set, 
+            batch_size=VAL_BATCH_SIZE,
+            shuffle=True,
+            num_workers=NUM_WORKERS,
+            pin_memory=True
+        )
+
+        criterion = nn.CrossEntropyLoss()
+        model.to(device)
+        model.eval()
+        total = 0
+        correct = 0
+        loss = 0
+        with torch.no_grad():
+            for idx, data in enumerate(val_loader):
+                if idx >= num_steps:
+                    break
+                images, labels = data
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+                loss += criterion(outputs, labels).item() * images.size(0)
+        
+        avg_loss = loss / total
+        accuracy = 100 * correct / total
+        print(f'Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%')
+        return accuracy
+    
+    @staticmethod
     def saveModel(model, path, save_name):
         if not os.path.exists(path):
             os.makedirs(path)
