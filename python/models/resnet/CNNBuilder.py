@@ -208,18 +208,14 @@ class CNNFactory:
         torch.quantization.prepare_qat(model, inplace=True)
     
     @staticmethod
-    def loadModel(model_path, reference_model=None, architecture_type=None, conv_layer_configs=None, fc_layer_configs=None, res_block_configs=None, num_classes=10, quantized=False, quantTrue=False):
+    def loadModel(path, name, reference_model=None, architecture_type=None, conv_layer_configs=None, fc_layer_configs=None, res_block_configs=None, num_classes=10, quantized=False, quantTrue=False):
         if reference_model is not None:
             model = reference_model
         else:
-            if architecture_type is None:
-                raise ValueError("architecture_type must be provided if no reference_model is given")
             model = CNNFactory.makeModel(architecture_type, conv_layer_configs, fc_layer_configs, res_block_configs, num_classes, quantTrue)
-        loadedModel = torch.load(model_path)
-        # if quantized:
-        #     torch.quantization.convert(model.eval(), inplace=True)
-        print(loadedModel)
-        print(model)
+        loadedModel = torch.load(os.path.join(path, name + '.pth'))
+        if quantized:
+            torch.quantization.convert(model.eval(), inplace=True)
         model.load_state_dict(loadedModel['state_dict'])
         return model
 
@@ -433,14 +429,7 @@ class CNNFactory:
             ## save the model checkpoint
             if avg_acc > best_val_acc:
                 best_val_acc = avg_acc
-                if not os.path.exists(CHECKPOINT_FOLDER):
-                    os.makedirs(CHECKPOINT_FOLDER)
-                print("Saving ...")
-                state = {'state_dict': net.state_dict(),
-                        'epoch': i,
-                        'lr': current_learning_rate}
-                saveName = Save_Name
-                torch.save(state, os.path.join(CHECKPOINT_FOLDER, saveName + '.pth'))
+                CNNFactory.saveModel(net, CHECKPOINT_FOLDER, Save_Name)
             print('')
 
         print("="*50)
@@ -475,30 +464,11 @@ class CNNFactory:
         return model
     
     @staticmethod
-    def evaluate_model(model, data_loader):
-        model.eval()
-        total = 0
-        correct = 0
-        loss = 0
-        with torch.no_grad():
-            for data in data_loader:
-                images, labels = data
-                images, labels = images.to(device), labels.to(device)
-                outputs = model(images)
-                _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-                loss += criterion(outputs, labels).item() * images.size(0)
-        
-        avg_loss = loss / total
-        accuracy = 100 * correct / total
-        print(f'Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%')
-        return accuracy
-    
-    @staticmethod
     def saveModel(model, path, save_name):
         if not os.path.exists(path):
             os.makedirs(path)
-        torch.save(model.state_dict(), os.path.join(path, save_name + '.pth'))
+        print("Saving ...")
+        state = {'state_dict': model.state_dict()}
+        torch.save(state, os.path.join(path, save_name + '.pth'))
         print(f"Model saved at {os.path.join(path, save_name + '.pth')}")
         return model
