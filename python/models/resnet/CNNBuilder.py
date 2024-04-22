@@ -475,7 +475,7 @@ class CNNFactory:
         return model
     
     @staticmethod
-    def evaluate_model(model, device, DATA_ROOT = "./data"):
+    def evaluate_model(model, device, num_steps, DATA_ROOT = "./data"):
 
         VAL_BATCH_SIZE = 50  # validation batch size
         NUM_WORKERS = 8  # number of workers for DataLoader
@@ -511,7 +511,9 @@ class CNNFactory:
         correct = 0
         loss = 0
         with torch.no_grad():
-            for data in val_loader:
+            for idx, data in enumerate(val_loader):
+                if idx >= num_steps:
+                    break
                 images, labels = data
                 images, labels = images.to(device), labels.to(device)
                 outputs = model(images)
