@@ -1,5 +1,6 @@
 import CNNBuilder
 from CNNBuilder import CNNFactory
+import torch
 
 conv_layer_configs = [
 {'in_channels': 3, 'out_channels': 32, 'kernel_size': 3, 'stride': 1, 'padding': 1},
@@ -50,8 +51,9 @@ def main():
     CNNFactory.quantizeModel(net)
     CNNFactory.saveModel(net, "./saved_models", save_name="ResNetQuantConfigTest", config=ResNetConfig, quantized=True)
 
+    device = torch.device("cuda:2")
     net = CNNFactory.loadModel(path = "./saved_models", name = "ResNetConfigTest")
-    CNNFactory.evaluate_model(net, 'cpu', 100, "./data")
+    CNNFactory.evaluate_model(model=net, device=device, batch_size=1, num_steps=100, DATA_ROOT="./data")
 
 def test1():
     # You can make and Train a normal Resnet like in this function

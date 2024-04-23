@@ -451,11 +451,11 @@ class CNNFactory:
         return model
     
     @staticmethod
-    def evaluate_model(model, device, num_steps, DATA_ROOT = "./data"):
+    def evaluate_model(model, device, batch_size, num_steps, DATA_ROOT = "./data"):
         # model.to(device)
         # model.eval()
 
-        VAL_BATCH_SIZE = 50  # validation batch size
+        VAL_BATCH_SIZE = batch_size  # validation batch size
         NUM_WORKERS = 8  # number of workers for DataLoader
         mean = [0.4914, 0.4822, 0.4465]
         std = [0.2023, 0.1994, 0.2010]
