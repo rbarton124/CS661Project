@@ -3,6 +3,7 @@
 #include "common.h"
 
 #include <torch/torch.h>
+#include <chrono>
 
 // Testing results struct
 struct TestingResults {
@@ -31,8 +32,12 @@ TestingResults test_model(auto& model, const auto& test_dataloader) {
     std::cout << "Starting to test model: ";
     int idx = 0;
     #endif
-    for(const auto& batch: *test_dataloader) {
+    int idx = 0;
+    using Clock = std::chrono::high_resolution_clock;
+    auto start = Clock::now();
 
+    for(const auto& batch: *test_dataloader) {
+        idx++;
         #ifdef DEBUG
         idx++;
         if (idx % 10 == 0) {
@@ -64,13 +69,18 @@ TestingResults test_model(auto& model, const auto& test_dataloader) {
         // all_targets.insert(all_targets.end(), targets_vec.begin(), targets_vec.end());
 
         total_samples += preds.size(0);
+        if (idx == 100) {
+            break;
+        }
         // END BOTTLENECK
 
         // all_preds.insert(all_preds.end(), preds.cpu().data_ptr(), preds.cpu().data_ptr() + preds.numel());
 
         // all_targets.insert(all_targets.end(), targets.cpu().data_ptr(), targets.cpu().data_ptr() + targets.numel());
     }
-
+    auto end = Clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Time taken: " << duration.count() << " microseconds." << std::endl;
 
     double accuracy = static_cast<double>(correct_predictions) / total_samples;
     double neg_log_loss = tot_neg_log_loss / total_samples;
