@@ -44,11 +44,24 @@ TestingResults test_model(auto& model, const auto& test_dataloader) {
             std::cout << idx << "'th batch\n";
         }
         #endif
-        
-        auto data = batch.data.to(device), targets = batch.target.to(device);
+
+        // std::cout << "Device:" << batch.data.device() << "\n";
+        int padW = (224 - 32) / 2; // Padding width
+        int padH = (224 - 32) / 2; // Padding height
+
+        auto data = torch::nn::functional::pad(batch.data, torch::nn::functional::PadFuncOptions({padW, padW, padH, padH}).mode(torch::kConstant).value(0));
+
+        // std::cout << data.size(0) << ", " << data.size(1) << ", " << data.size(2) << ", " << data.size(3) << "\n";
+
+        data = data.to(device);
+        auto targets = batch.target.to(device);
+
+        // std::cout << "Device: " << data.device() << "\n";
+
+        // Padding input tensor
 
         auto outputs = model.forward({data}).toTensor();
-
+       
         auto preds = outputs.argmax(1);
 
         correct_predictions += preds.eq(targets).sum().item().toInt();
@@ -56,7 +69,6 @@ TestingResults test_model(auto& model, const auto& test_dataloader) {
         auto loss = torch::nn::functional::cross_entropy(outputs, targets, torch::nn::functional::CrossEntropyFuncOptions().reduction(torch::kSum));
 
         tot_neg_log_loss += loss.item().toDouble();
-
 
         // --------- THIS CAN BE PERF BOTTLENECK
         // auto preds_cpu = preds.to(torch::kCPU, torch::kInt64, true, true);
@@ -72,6 +84,8 @@ TestingResults test_model(auto& model, const auto& test_dataloader) {
         if (idx == 100) {
             break;
         }
+
+        break;
         // END BOTTLENECK
 
         // all_preds.insert(all_preds.end(), preds.cpu().data_ptr(), preds.cpu().data_ptr() + preds.numel());
